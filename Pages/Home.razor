@@ -1,0 +1,103 @@
+@page "/"
+
+<PageTitle>Personagens de Naruto</PageTitle>
+
+<div class="character-page">
+    <h1 class="character-title">Personagem de Naruto</h1>
+
+    <input type="search"
+           class="form-control mb-2"
+           placeholder="Buscar pelo nome e pressionar Enter (ex.: Sasuke)"
+           aria-label="Buscar personagem"
+           @bind="_searchTerm"
+           @bind:after="SearchAsync" />
+
+    <select class="form-select"
+            aria-label="Selecione um personagem"
+            @bind="_selectedId"
+            @bind:after="SelectCharacter"
+            disabled="@_isLoading">
+        <option value="">@(_isLoading ? "Carregando personagens..." : "Selecione um personagem")</option>
+
+        @foreach (var item in _characters)
+        {
+            <option value="@item.Id">@item.Name</option>
+        }
+    </select>
+
+    @if (_totalPages > 1)
+    {
+        <div class="character-pager">
+            <button type="button"
+                    class="btn btn-outline-secondary btn-sm"
+                    disabled="@(_isLoading || _currentPage <= 1)"
+                    @onclick="PreviousPageAsync">
+                Anterior
+            </button>
+            <span>Página @_currentPage de @_totalPages</span>
+            <button type="button"
+                    class="btn btn-outline-secondary btn-sm"
+                    disabled="@(_isLoading || _currentPage >= _totalPages)"
+                    @onclick="NextPageAsync">
+                Próxima
+            </button>
+        </div>
+    }
+
+    @if (_errorMessage is not null)
+    {
+        <div class="alert alert-danger mt-3" role="alert">@_errorMessage</div>
+    }
+    else if (_isLoading)
+    {
+        <p class="mt-3"><em>Carregando... a API pode levar alguns segundos para responder.</em></p>
+    }
+    else if (_character is null)
+    {
+        <div class="alert alert-warning mt-3" role="alert">Nenhum personagem encontrado.</div>
+    }
+    else
+    {
+        <section class="character-card">
+            <div class="character-info">
+                <p class="character-eyebrow">Informações do personagem</p>
+                <h2 class="character-name">@_character.Name</h2>
+
+                <p class="character-label">Clã</p>
+                <p class="character-value">@Describe(_character.Personal?.Clan)</p>
+
+                <p class="character-label">Afiliação</p>
+                <p class="character-value">@Describe(_character.Personal?.Affiliation)</p>
+
+                <p class="character-label">Patente ninja</p>
+                <p class="character-value">@Describe(_character.Rank?.NinjaRank)</p>
+
+                <p class="character-label">Jutsus (@_character.Jutsu.Count)</p>
+
+                @if (_character.Jutsu.Count > 0)
+                {
+                    <div class="character-chips">
+                        @foreach (var jutsu in _character.Jutsu)
+                        {
+                            <span class="character-chip">@jutsu</span>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="character-value">Não informado</p>
+                }
+
+                <p class="character-label character-id-label">ID</p>
+                <code>@_character.Id</code>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(_character.MainImage))
+            {
+                <div class="character-visual">
+                    <img src="@_character.MainImage" alt="@_character.Name" referrerpolicy="no-referrer" />
+                </div>
+            }
+        </section>
+    }
+</div>
